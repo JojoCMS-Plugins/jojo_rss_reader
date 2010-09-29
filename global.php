@@ -14,18 +14,13 @@
  * @link    http://www.jojocms.org JojoCMS
  */
 
-
-/*
-// Example usage
-
-if (class_exists('JOJO_Plugin_Jojo_rss_reader')) {
-    $url = 'http://www.jojocms.org/blog/rss/';
-    $numitems = 5;
-    $smarty->assign('sidebar_rss', JOJO_Plugin_Jojo_rss_reader::getHtml($url, $numitems));
-}
-*/
-if (class_exists('JOJO_Plugin_Jojo_rss_reader')) {
-    $url = 'http://www.jojocms.org/blog/rss/';
-    $numitems = 5;
-    $smarty->assign('sidebar_rss', JOJO_Plugin_Jojo_rss_reader::getHtml($url, $numitems));
+$feeds = Jojo::getOption('jojo_rss_reader_feeds', '');
+if (!empty($feeds)) {
+    $rssfeed = array();
+    $feeds = explode('<br />', nl2br($feeds));
+    $numitems = Jojo::getOption('jojo_rss_reader_snippet_number', 5);
+    foreach ($feeds as $feed) {
+        $rssfeeds[] = JOJO_Plugin_Jojo_rss_reader::getFeed(trim($feed), $numitems);
+    }
+    $smarty->assign('rssfeeds', $rssfeeds);    
 }

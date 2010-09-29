@@ -15,19 +15,20 @@
  */
 
 $_options[] = array(
-    'id'          => 'jojo_rss_reader_last_cache',
-    'category'    => 'System',
-    'label'       => 'RSS last cached',
-    'description' => 'The last time external RSS content was fetched',
-    'type'        => 'hidden',
-    'default'     => '0',
+    'id'          => 'jojo_rss_reader_feeds',
+    'category'    => 'External RSS',
+    'label'       => 'RSS Feeds',
+    'description' => 'External RSS URLs - newline separated',
+    'type'        => 'textarea',
+    'rows'      => '3',
     'options'     => '',
+    'default'     => 'http://www.jojocms.org/blog/rss/',
     'plugin'      => 'jojo_rss_reader'
 );
 
 $_options[] = array(
     'id'          => 'jojo_rss_reader_cache_length',
-    'category'    => 'System',
+    'category'    => 'External RSS',
     'label'       => 'RSS cache length',
     'description' => 'Number of minutes to hold the RSS in cache',
     'type'        => 'integer',
@@ -37,12 +38,12 @@ $_options[] = array(
 );
 
 $_options[] = array(
-    'id'          => 'jojo_rss_reader_content',
-    'category'    => 'System',
-    'label'       => 'RSS content',
-    'description' => 'The content from the last RSS fetch.',
-    'type'        => 'hidden',
-    'default'     => '',
+    'id'          => 'jojo_rss_reader_snippet_number',
+    'category'    => 'External RSS',
+    'label'       => 'RSS snippets',
+    'description' => 'How many snippets to fetch from the RSS feeds.',
+    'type'        => 'integer',
     'options'     => '',
+    'default'     => '5',
     'plugin'      => 'jojo_rss_reader'
 );

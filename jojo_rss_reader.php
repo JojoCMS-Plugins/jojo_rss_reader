@@ -14,47 +14,61 @@
  * @link    http://www.jojocms.org JojoCMS
  */
 
-class JOJO_Plugin_Jojo_rss_reader extends JOJO_Plugin
+class Jojo_Plugin_Jojo_rss_reader extends Jojo_Plugin
 {
-    /* returns HTML - modify jojo_rss_reader_sidebar.tpl to customize */
+    /* returns HTML - modify Jojo_rss_reader_sidebar.tpl to customize */
     function getHtml($url, $max=5)
     {
         global $smarty;
-        $content = JOJO_Plugin_Jojo_rss_reader::getFeed($url, $max);
+        $content = Jojo_Plugin_Jojo_rss_reader::getFeed($url, $max);
         $smarty->assign('jojo_rss_reader_content', $content);
         return $smarty->fetch('jojo_rss_reader_sidebar.tpl');
     }
-    
+
     /* returns an array for looping through in Smarty */
     function getFeed($url, $max=5)
     {
-        if (!defined('MAGPIE_DEBUG')) define('MAGPIE_DEBUG', 0);
-        
-        $cachelength = Jojo::getOption('jojo_rss_reader_cache_length');
-        if (empty($cachelength)) $cachelength = 20;
-        
-        $time = JOJO::getOption('jojo_rss_reader_last_cache');
-        if (empty($time) || Jojo::ctrlF5() || ($time < strtotime('-'.$cachelength.' minutes'))) {
-            foreach (Jojo::listPlugins('external/magpie/rss_fetch.inc') as $pluginfile) {
+        static $_cache;
+
+        $cacheKey = 'rss-' . $url;
+        $cacheKeyTime = 'rss-' . $url . '-time';
+        $cachelength = 60*(Jojo::getOption('jojo_rss_reader_cache_length', 20));
+        $now = time();
+        $then = isset($_cache[$cacheKeyTime]) ? $_cache[$cacheKeyTime] : $now;
+        $_cache[$cacheKeyTime] =  $then;
+
+        $refresh = (boolean) (Jojo::ctrlF5() || ($now > ($then + $cachelength) ));
+
+        /* Have we got a cached result? */
+        if (isset($_cache[$cacheKey]) && !$refresh) {
+            $feed = unserialize($_cache[$cacheKey]);
+        } else {
+            foreach (Jojo::listPlugins('external/rss_php.php') as $pluginfile) {
                 require_once($pluginfile);
                 break;
             }
-            
-            $rss = fetch_rss($url);
-            $n = min($max, count($rss->items));
-            $content = array();
-            for ($i = 0; $i < $n; $i++) {
-              $rss->items[$i]['title']       = trim($rss->items[$i]['title']);
-              $rss->items[$i]['description'] = trim($rss->items[$i]['description']);
-              $content[]                     = $rss->items[$i];
-            }
-            /* save to cache */
-            Jojo::insertQuery("REPLACE INTO {option} SET op_name='jojo_rss_reader_last_cache', op_value=?, op_category='system'", time());
-            Jojo::insertQuery("REPLACE INTO {option} SET op_name='jojo_rss_reader_content', op_value=?, op_category='system'", serialize($content));
-        } else {
-            /* read from cache */
-            $content = unserialize(Jojo::getOption('jojo_rss_reader_content'));
+            $rss = new rss_php;
+            $rss->load($url);
+            $feed = array();
+            $rawfeed = $rss->getItems();
+            if (count($rawfeed)) {
+                $feed['channel'] = $rss->getChannel();
+                $feed['channel']['url'] = $url;
+                foreach ($rawfeed as $k => $item) {
+                    $feed['items'][$k]['title']       = isset($item['title']) ? trim(htmlspecialchars($item['title'], ENT_COMPAT, 'UTF-8', false)) : '';
+                    $feed['items'][$k]['description'] = isset($item['description']) ? trim(htmlspecialchars($item['description'], ENT_COMPAT, 'UTF-8', false)) : '';
+                    $feed['items'][$k]['link']        = isset($item['link']) ? $item['link'] : '';
+                    $feed['items'][$k]['pubDate']     = isset($item['pubDate']) ? $item['pubDate'] : '';
+                    $feed['items'][$k]['author']      = isset($item['author']) ? $item['author'] : '';
+                }
+
+                /* save to cache */
+                $_cache[$cacheKey] =  serialize($feed);
+                $_cache[$cacheKeyTime] =  $now;
+           } else {
+                return false;
+           }
         }
-        return $content;
+        return $feed;
     }
 }
