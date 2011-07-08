@@ -51,7 +51,7 @@ class Jojo_Plugin_Jojo_rss_reader extends Jojo_Plugin
             $rss->load($url);
             $feed = array();
             $rawfeed = $rss->getItems();
-            if (count($rawfeed)) {
+            if (is_array($rawfeed) && count($rawfeed)) {
                 $feed['channel'] = $rss->getChannel();
                 $feed['channel']['url'] = $url;
                 foreach ($rawfeed as $k => $item) {

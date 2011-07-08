@@ -26,7 +26,12 @@ class rss_php {
             if($url) {
                 $prev = error_reporting(0);
                 if($unblock) {
-                    $this->loadParser(self::html_convert_entities(file_get_contents($url, false, $this->randomContext())));
+                    $feedxml = file_get_contents($url, false, $this->randomContext());
+                    if (function_exists('tidy_parse_string')) {
+                    $feedxml = tidy_parse_string($feedxml);
+                    tidy_clean_repair($feedxml); 
+                    }
+                    $this->loadParser(self::html_convert_entities($feedxml));
                 } else {
                     $this->loadParser(file_get_contents($url));
                 }
@@ -72,10 +77,11 @@ class rss_php {
 ***/
     private function loadParser($rss=false) {
         if($rss) {
+            $rss = Jojo::xmlEscape($rss, $specialchars=true);
             $this->document = array();
             $this->channel = array();
             $this->items = array();
-            $DOMDocument = new DOMDocument;
+            $DOMDocument = new DOMDocument("1.0", "UTF-8");
             $DOMDocument->strictErrorChecking = false;
             $DOMDocument->substituteEntities = false;
             $DOMDocument->loadXML($rss);
@@ -107,10 +113,10 @@ class rss_php {
         foreach($nodeList as $values) {
             if(substr($values->nodeName,0,1) != '#') {
                 if($values->nodeName == 'item') {
-                    $nodeName = $values->nodeName.':'.$itemCounter;
+                    $nodeName = 'item:' . $itemCounter;
                     $itemCounter++;
                 } else {
-                    $nodeName = $values->nodeName;
+                    $nodeName = (string)($values->nodeName);
                 }
                 $tempNode[$nodeName] = array();
                 if($values->attributes) {
@@ -145,8 +151,8 @@ class rss_php {
     private function randomContext() {
         $headerstrings = array();
         $headerstrings['User-Agent'] = 'Mozilla/5.0 (Windows; U; Windows NT 5.'.rand(0,2).'; en-US; rv:1.'.rand(2,9).'.'.rand(0,4).'.'.rand(1,9).') Gecko/2007'.rand(10,12).rand(10,30).' Firefox/2.0.'.rand(0,1).'.'.rand(1,9);
-        $headerstrings['Accept-Charset'] = rand(0,1) ? 'en-gb,en;q=0.'.rand(3,8) : 'en-us,en;q=0.'.rand(3,8);
-        $headerstrings['Accept-Language'] = 'en-us,en;q=0.'.rand(4,6);
+        $headerstrings['Accept-Charset'] = rand(0,1) ? 'en-nz,en;q=0.'.rand(3,8) : 'en-nz,en;q=0.'.rand(3,8);
+        $headerstrings['Accept-Language'] = 'en-nz,en;q=0.'.rand(4,6);
         $setHeaders =   'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5'."\r\n".
                         'Accept-Charset: '.$headerstrings['Accept-Charset']."\r\n".
                         'Accept-Language: '.$headerstrings['Accept-Language']."\r\n".
