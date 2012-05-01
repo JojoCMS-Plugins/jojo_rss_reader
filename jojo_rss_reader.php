@@ -56,7 +56,7 @@ class Jojo_Plugin_Jojo_rss_reader extends Jojo_Plugin
                 $feed['channel']['url'] = $url;
                 foreach ($rawfeed as $k => $item) {
                     $feed['items'][$k]['title']       = isset($item['title']) ? trim(htmlspecialchars($item['title'], ENT_COMPAT, 'UTF-8', false)) : '';
-                    $feed['items'][$k]['description'] = isset($item['description']) ? trim(htmlspecialchars($item['description'], ENT_COMPAT, 'UTF-8', false)) : '';
+                    $feed['items'][$k]['description'] = isset($item['description']) ? trim($item['description']) : '';
                     $feed['items'][$k]['link']        = isset($item['link']) ? $item['link'] : '';
                     $feed['items'][$k]['pubDate']     = isset($item['pubDate']) ? $item['pubDate'] : '';
                     $feed['items'][$k]['author']      = isset($item['author']) ? $item['author'] : '';
